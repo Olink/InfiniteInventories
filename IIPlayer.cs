@@ -12,7 +12,7 @@ namespace InfiniteInventories
 	{
 		public readonly Dictionary<String, NetItem[]> Inventory = new Dictionary<String, NetItem[]>();
 		public string currentInventory = "";
-		public bool overflow = true;
+		public bool overflow = false;
 		public string overflowInv = "";
 		public TSPlayer Player { get; private set; }
 
@@ -93,6 +93,46 @@ namespace InfiniteInventories
 			}
 			BackupInventoryManager.Restore(this);
 			RefreshInventory();
+		}
+
+		public List<String> GetInventoryNames()
+		{
+			return Inventory.Keys.ToList();
+		}
+
+		public int GetInventoryUsage(string name)
+		{
+			int count = 0;
+			for (int i = 0; i < 50; i++)
+			{
+				if (Inventory[name][i] != null && Inventory[name][i].netID != 0)
+					count++;
+			}
+			return count;
+		}
+
+		public Dictionary<string, int> FindItem(Item item)
+		{
+			Dictionary<string, int> found = new Dictionary<string, int>();
+			if (item.netID != 0)
+			{
+				foreach (var inv in Inventory)
+				{
+					var count = 0;
+					for (int j = 0; j < 50; j++)
+					{
+						if (inv.Value[j] != null && inv.Value[j].netID == item.netID)
+						{
+							count += inv.Value[j].stack;
+						}
+					}
+					if (count != 0)
+					{
+						found.Add(inv.Key, count);
+					}
+				}
+			}
+			return found;
 		}
 
 		public void SetOverflow(string invName)

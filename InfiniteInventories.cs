@@ -132,25 +132,33 @@ namespace InfiniteInventories
 		private void OnSlot(object sender, GetDataHandlers.PlayerSlotEventArgs args)
 		{
 			var player = players[args.PlayerId];
-			if (player.Player.IsLoggedIn)
+			if (player != null)
 			{
-				if (player.overflow)
+				if (player.Player.IsLoggedIn)
 				{
-					if (args.Slot == 49)
+					if (player.overflow)
 					{
-						args.Handled = true;
-						int freeSlot = player.GetOverflowSlot();
-						if(freeSlot > -1)
+						if (args.Slot == 49)
 						{
-							player.Inventory[player.overflowInv][freeSlot] = new NetItem(){netID = args.Type, prefix = args.Prefix, stack = args.Stack};
-							player.Player.TPlayer.inventory[args.Slot].netDefaults(0);
-							player.Player.SendData(PacketTypes.PlayerSlot, "", player.Player.Index, args.Slot);
-						}
-						else
-						{
-							player.Player.SendErrorMessage("Your overflow inventory is full, disabling overflow.");
-							player.overflow = false;
-							player.overflowInv = "";
+							args.Handled = true;
+							int freeSlot = player.GetOverflowSlot();
+							if (freeSlot > -1)
+							{
+								player.Inventory[player.overflowInv][freeSlot] = new NetItem()
+								{
+									netID = args.Type,
+									prefix = args.Prefix,
+									stack = args.Stack
+								};
+								player.Player.TPlayer.inventory[args.Slot].netDefaults(0);
+								player.Player.SendData(PacketTypes.PlayerSlot, "", player.Player.Index, args.Slot);
+							}
+							else
+							{
+								player.Player.SendErrorMessage("Your overflow inventory is full, disabling overflow.");
+								player.overflow = false;
+								player.overflowInv = "";
+							}
 						}
 					}
 				}
@@ -174,6 +182,8 @@ namespace InfiniteInventories
 				args.Player.SendErrorMessage("       /ii create [name] - create new inventory");
 				args.Player.SendErrorMessage("       /ii delete [name] - delete the inventory");
 				args.Player.SendErrorMessage("       /ii overflow [name] - overflow items to inventory, leave blank to turn off.");
+				args.Player.SendErrorMessage("       /ii list - list all inventories and how many items in each.");
+				args.Player.SendErrorMessage("       /ii find [name or id] - list all inventories that contain the item and how many in that inventory.");
 				return;
 			}
 			switch (args.Parameters[0])
@@ -308,6 +318,52 @@ namespace InfiniteInventories
 					}
 				}
 				break;
+				case "list":
+				{
+					List<String> invs = player.GetInventoryNames();
+					foreach (var invName in invs)
+					{
+						args.Player.SendInfoMessage("Inventory {0}: {1}/50", invName, player.GetInventoryUsage(invName));
+					}
+				}
+				break;
+				case "find":
+				{
+					if (args.Parameters.Count > 1)
+					{
+						var itemSearch = String.Join(" ", args.Parameters.ToArray(), 1, args.Parameters.Count - 1);
+						List<Item> items = TShock.Utils.GetItemByIdOrName(itemSearch);
+						if (items.Count > 1)
+						{
+							TShock.Utils.SendMultipleMatchError(args.Player, items.Select(i => i.name));
+							return;
+						}
+
+						if (items.Count == 0)
+						{
+							args.Player.SendErrorMessage("Failed to find an item with id or name of '{0}'.", itemSearch);
+							return;
+						}
+
+						Dictionary<String, int> found = player.FindItem(items[0]);
+						if (found.Count > 0)
+						{
+							foreach (var f in found)
+							{
+								args.Player.SendInfoMessage("Found {0} {1} in {2}.", f.Value, itemSearch, f.Key);
+							}
+						}
+						else
+						{
+							args.Player.SendErrorMessage("Could not find any {0} in your inventories.", items[0].name);
+						}
+					}
+					else
+					{
+						args.Player.SendErrorMessage("Usage: /ii find [name or id] - list all inventories that contain the item and how many in that inventory.");
+					}
+				}
+				break;
 				default:
 				{
 					args.Player.SendErrorMessage("Usage: /ii swap [name] - swap to inventory");
@@ -316,6 +372,8 @@ namespace InfiniteInventories
 					args.Player.SendErrorMessage("       /ii create [name] - create new inventory");
 					args.Player.SendErrorMessage("       /ii delete [name] - delete the inventory");
 					args.Player.SendErrorMessage("       /ii overflow [name] - overflow items to inventory, leave blank to turn off.");
+					args.Player.SendErrorMessage("       /ii list - list all inventories and how many items in each.");
+					args.Player.SendErrorMessage("       /ii find [name or id] - list all inventories that contain the item and how many in that inventory.");
 				}
 				break;
 			}
