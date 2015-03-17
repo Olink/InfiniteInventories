@@ -96,6 +96,7 @@ namespace InfiniteInventories
 			ServerApi.Hooks.ServerJoin.Register(this, OnJoin);
 			TShockAPI.GetDataHandlers.PlayerSlot += OnSlot;
 			PlayerHooks.PlayerPostLogin += OnPostLogin;
+			AccountHooks.AccountDelete += OnAccountDelete;
 
 			Commands.ChatCommands.Add(new Command("infiniteinventory", SwapInventory, "ii"){AllowServer = false});
 		}
@@ -108,6 +109,7 @@ namespace InfiniteInventories
 				ServerApi.Hooks.ServerJoin.Deregister(this, OnJoin);
 				TShockAPI.GetDataHandlers.PlayerSlot -= OnSlot;
 				PlayerHooks.PlayerPostLogin -= OnPostLogin;
+				AccountHooks.AccountDelete -= OnAccountDelete;
 			}
 			base.Dispose(disposing);
 		}
@@ -169,6 +171,11 @@ namespace InfiniteInventories
 		{
 			BackupInventoryManager.Restore(players[args.Player.Index]);
 			inventoryManager.LoadData(players[args.Player.Index]);
+		}
+
+		private void OnAccountDelete(AccountDeleteEventArgs args)
+		{
+			inventoryManager.RemoveUser(args.User.ID);
 		}
 
 		private void SwapInventory(CommandArgs args)

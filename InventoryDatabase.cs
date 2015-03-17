@@ -137,5 +137,17 @@ namespace InfiniteInventories
 			}
 			return inv;
 		}
+
+		public void RemoveUser(int id)
+		{
+			try
+			{
+				database.Query("DELETE FROM InfiniteInventories WHERE userID = @0", id);
+			}
+			catch (SqlException ex)
+			{
+				TShock.Log.ConsoleError("Failed to delete II for player {0}: {1}", id, ex.Message);
+			}
+		}
 	}
 }
