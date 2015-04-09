@@ -64,8 +64,8 @@ namespace InfiniteInventories
 			{
 				foreach (var inventory in player.Inventory)
 				{
-					if (database.Query("INSERT OR IGNORE INTO InfiniteInventories (userID, name, inventory) VALUES (@0, @1, @2)", player.Player.UserID,
-						inventory.Key, ToString(inventory.Value)) == 0)
+					if (database.InsertOrIgnore("InfiniteInventories", new[] { "userID", "name", "inventory" }, new object[]{player.Player.UserID,
+						inventory.Key, ToString(inventory.Value)}) == 0)
 					{
 						database.Query("UPDATE InfiniteInventories SET inventory=@0 WHERE userID = @1 AND name = @2",
 							ToString(inventory.Value), player.Player.UserID, inventory.Key);

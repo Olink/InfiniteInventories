@@ -122,6 +122,13 @@ namespace InfiniteInventories
 		private void OnLeave(LeaveEventArgs args)
 		{
 			var player = players[args.Who];
+
+			if (player == null)
+			{
+				//quick disconnect, disregard.
+				return;
+			}
+
 			if (player.Player.IsLoggedIn)
 			{
 				player.Save();
@@ -204,6 +211,10 @@ namespace InfiniteInventories
 						{
 							player.SwapInventories(invName);
 							args.Player.SendSuccessMessage("Your inventory has been swapped.");
+						}
+						else
+						{
+							args.Player.SendErrorMessage("'{0}' inventory does not exist.", invName);
 						}
 					}
 					else
@@ -328,6 +339,13 @@ namespace InfiniteInventories
 				case "list":
 				{
 					List<String> invs = player.GetInventoryNames();
+
+					if (invs.Count < 1)
+					{
+						args.Player.SendInfoMessage("You currently have no inventories.");
+						return;
+					}
+
 					foreach (var invName in invs)
 					{
 						args.Player.SendInfoMessage("Inventory {0}: {1}/50", invName, player.GetInventoryUsage(invName));

@@ -44,7 +44,7 @@ namespace InfiniteInventories
 		{
 			try
 			{
-				database.Query("INSERT OR IGNORE INTO BackupInventory (id, inventory) VALUES (@0, @1)", player.Player.UserID, NetItem.ToString(inv));
+				database.InsertOrIgnore("BackupInventory", new[] { "id", "inventory" }, new object[] { player.Player.UserID, NetItem.ToString(inv) });
 			}
 			catch (SqlException ex)
 			{
